@@ -16,7 +16,7 @@ beforeEach(function (done) {
             Todo.insertMany(todos);
         })
         .then(() => done());
-})
+});
 
 describe('POST /todos', function () {
     it('should create a new todo', function (done) {
