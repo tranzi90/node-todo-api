@@ -12,9 +12,7 @@ const todos = [{
 
 beforeEach(function (done) {
     Todo.deleteMany({})
-        .then(function () {
-            Todo.insertMany(todos);
-        })
+        .then(() => Todo.insertMany(todos))
         .then(() => done());
 });
 
@@ -26,9 +24,7 @@ describe('POST /todos', function () {
             .post('/todos')
             .send({text})
             .expect(200)
-            .expect(function (res) {
-                expect(res.body.text).toBe(text);
-            })
+            .expect((res) => expect(res.body.text).toBe(text))
             .end(function (err, res) {
                 if (err)
                     return done(err);
@@ -63,9 +59,7 @@ describe('GET /todos', function () {
         request(app)
             .get('/todos')
             .expect(200)
-            .expect(function (res) {
-                expect(res.body.todos.length).toBe(2);
-            })
+            .expect((res) => expect(res.body.todos.length).toBe(2))
             .end(done);
     });
 });
