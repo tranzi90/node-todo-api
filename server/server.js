@@ -82,6 +82,16 @@ app.patch('/todos/:id', function (req, res) {
     }).catch(() => res.status(400).send());
 });
 
+app.post('/users', function (req, res) {
+    let user = new User(_.pick(req.body, ['email', 'password']));
+
+    user.save().then(function () {
+        res.header('x-auth', user.generateAuthToken()).send(user);
+    }, function (e) {
+        res.status(400).send(e);
+    });
+});
+
 app.listen(port, function () {
     console.log(`Пайехалле блять на порту ${port}`);
 });
