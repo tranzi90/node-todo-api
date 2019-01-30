@@ -1,25 +1,14 @@
 const expect = require('expect');
 const request = require('supertest');
-
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 const {ObjectID} = require('mongodb');
 
-const todos = [{
-    _id: new ObjectID(),
-    text: 'test 1'
-}, {
-    _id: new ObjectID(),
-    text: 'test 2',
-    completed: true,
-    completedAt: 333
-}];
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-beforeEach(function (done) {
-    Todo.deleteMany({})
-        .then(() => Todo.insertMany(todos))
-        .then(() => done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', function () {
     it('should create a new todo', function (done) {
@@ -30,7 +19,7 @@ describe('POST /todos', function () {
             .send({text})
             .expect(200)
             .expect((res) => expect(res.body.text).toBe(text))
-            .end(function (err, res) {
+            .end(function (err) {
                 if (err)
                     return done(err);
 
@@ -47,7 +36,7 @@ describe('POST /todos', function () {
             .post('/todos')
             .send({})
             .expect(400)
-            .end(function (err, res) {
+            .end(function (err) {
                 if (err)
                     return done(err);
 
@@ -60,9 +49,7 @@ describe('POST /todos', function () {
 });
 
 describe('GET /todos', function () {
-
     it('should get all todos', function (done) {
-
         request(app)
             .get('/todos')
             .expect(200)
@@ -72,9 +59,7 @@ describe('GET /todos', function () {
 });
 
 describe('GET /todos/:id', function () {
-
     it('should get todo with id', function (done) {
-
         request(app)
             .get(`/todos/${todos[0]._id.toString()}`)
             .expect(200)
@@ -172,6 +157,79 @@ describe('PATCH /todos/:id', function () {
                 expect(res.body.todo.completed).toBe(false);
                 expect(res.body.todo.completedAt).toBeNull();
             })
+            .end(done);
+    });
+});
+
+describe('GET /users/me', function () {
+    it('should return user if authenticated', function (done) {
+        request(app)
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+            .end(done);
+    });
+
+    it('should return 401 if not authenticated', function (done) {
+        request(app)
+            .get('/users/me')
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    });
+});
+
+describe('POST /users', function () {
+    it('should create a user', function (done) {
+        let email = 'test@test.huy';
+        let password = 'testpass';
+
+        request(app)
+            .post('/users')
+            .send({email, password})
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toBeDefined();
+                expect(res.body._id).toBeDefined();
+                expect(res.body.email).toBe(email);
+            })
+            .end(function (err) {
+                if (err)
+                    return done(err);
+
+                User.findOne({email}).then(function (user) {
+                    expect(user).toBeDefined();
+                    expect(user.password).not.toBe(password);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+
+    it('should return validation errors if request invalid', function (done) {
+        let email = 'acc1mail.ua';
+        let password = 'pass';
+
+        request(app)
+            .post('/users')
+            .send({email, password})
+            .expect(400)
+            .end(done);
+    });
+
+    it('should not create user if email in use', function (done) {
+        let email = users[0].email;
+        let password = 'testpass';
+
+        request(app)
+            .post('/users')
+            .send({email, password})
+            .expect(400)
             .end(done);
     });
 });
