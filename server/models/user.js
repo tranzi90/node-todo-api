@@ -48,7 +48,6 @@ UserSchema.methods.generateAuthToken = function () {
 };
 
 UserSchema.statics.findByToken = function (token) {
-
     try {
         var decoded = jwt.verify(token, 'secret');
     } catch (e) {
@@ -59,6 +58,23 @@ UserSchema.statics.findByToken = function (token) {
         _id: decoded._id,
         'tokens.token': token,
         'tokens.access': 'auth'
+    });
+};
+
+UserSchema.statics.findByCredentials = function (email, password) {
+
+     return this.findOne({email}).then(function (user) {
+        if (!user)
+            return Promise.reject();
+        
+        return new Promise(function (resolve, reject) {
+            bcrypt.compare(password, user.password, function (err, res) {
+                if (res)
+                    resolve(user);
+                else
+                    reject();
+            });
+        });
     });
 };
 

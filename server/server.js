@@ -97,6 +97,16 @@ app.get('/users/me', authenticate, function (req, res) {
     res.send(req.user);
 });
 
+app.post('/users/login', function (req, res) {
+    let body = _.pick(req.body, ['email', 'password']);
+
+    User.findByCredentials(body.email, body.password)
+        .then(function (user) {
+            res.header('x-auth', user.generateAuthToken()).send(user);
+        })
+        .catch(() => res.status(400).send());
+});
+
 app.listen(port, function () {
     console.log(`Пайехалле блять на порту ${port}`);
 });
