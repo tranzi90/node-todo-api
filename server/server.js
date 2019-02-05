@@ -87,10 +87,9 @@ app.post('/users', function (req, res) {
     let user = new User(_.pick(req.body, ['email', 'password']));
 
     user.save().then(function () {
-        res.header('x-auth', user.generateAuthToken()).send(user);
-    }, function (e) {
-        res.status(400).send(e);
-    });
+        return user.generateAuthToken();
+    }).then((token) => res.header('x-auth', token).send(user))
+        .catch((e) => res.status(400).send(e));
 });
 
 app.get('/users/me', authenticate, function (req, res) {
@@ -98,13 +97,15 @@ app.get('/users/me', authenticate, function (req, res) {
 });
 
 app.post('/users/login', function (req, res) {
-    let body = _.pick(req.body, ['email', 'password']);
+    var body = _.pick(req.body, ['email', 'password']);
 
     User.findByCredentials(body.email, body.password)
         .then(function (user) {
-            res.header('x-auth', user.generateAuthToken()).send(user);
+            user.generateAuthToken().then((token) => {
+               res.header('x-auth', token).send(user);
+           })
         })
-        .catch(() => res.status(400).send());
+        .catch((e) => res.status(400).send(e));
 });
 
 app.listen(port, function () {

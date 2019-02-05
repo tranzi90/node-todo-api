@@ -233,3 +233,50 @@ describe('POST /users', function () {
             .end(done);
     });
 });
+
+describe('POST /users/login', function () {
+    it('should login user and return auth token', function (done) {
+        let email = users[1].email;
+        let password = users[1].password;
+
+        request(app)
+            .post('/users/login')
+            .send({email, password})
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toBeDefined();
+            })
+            .end(function (err, res) {
+                if (err)
+                    return done(err);
+
+                User.findById(users[1]._id).then(function (user) {
+                    expect(user.tokens[0]).toHaveProperty('access', 'auth');
+                    expect(user.tokens[0]).toHaveProperty('token', res.headers['x-auth']);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+
+    it('should return validation errors if request invalid', function (done) {
+        let email = users[1].email;
+        let password = users[0].password;
+
+        request(app)
+            .post('/users/login')
+            .send({email, password})
+            .expect(400)
+            .expect((res) => {
+                expect(res.headers['x-auth']).not.toBeDefined();
+            })
+            .end(function (err, res) {
+                if (err)
+                    return done(err);
+
+                User.findById(users[1]._id).then(function (user) {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+});

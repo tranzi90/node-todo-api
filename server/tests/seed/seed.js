@@ -39,8 +39,9 @@ const populateTodos = function (done) {
 
 const populateUsers = function (done) {
     User.deleteMany({})
-        .then(() => User.insertMany(users))
-        .then(() => done());
+        .then(() => new User(users[0]).save())
+        .then(() => new User(users[1]).save())
+        .then(() => done())
 };
 
 module.exports = {todos, populateTodos, users, populateUsers};
