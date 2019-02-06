@@ -108,6 +108,12 @@ app.post('/users/login', function (req, res) {
         .catch((e) => res.status(400).send(e));
 });
 
+app.delete('/users/me/token', authenticate, function (req, res) {
+    req.user.removeToken(req.token)
+        .then(() => res.status(200).send(),
+            () => res.status(400).send());
+});
+
 app.listen(port, function () {
     console.log(`Пайехалле блять на порту ${port}`);
 });
