@@ -37,7 +37,7 @@ UserSchema.methods.toJSON = function () {return _.pick(this.toObject(), ['_id', 
 
 UserSchema.methods.generateAuthToken = function () {
     var access = 'auth';
-    var token = jwt.sign({_id: this._id.toString(), access}, 'secret').toString();
+    var token = jwt.sign({_id: this._id.toString(), access}, process.env.JWT_SECRET).toString();
 
     this.tokens.push({access, token});
 
@@ -56,7 +56,7 @@ UserSchema.methods.removeToken = function (token) {
 
 UserSchema.statics.findByToken = function (token) {
     try {
-        var decoded = jwt.verify(token, 'secret');
+        var decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (e) {
         return Promise.reject(e);
     }
