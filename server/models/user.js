@@ -37,7 +37,7 @@ UserSchema.methods.toJSON = function () {return _.pick(this.toObject(), ['_id', 
 
 UserSchema.methods.generateAuthToken = function () {
     var access = 'auth';
-    var token = jwt.sign({_id: this._id.toString(), access}, process.env.JWT_SECRET).toString();
+    var token = jwt.sign({_id: this._id.toString(), access}, process.env.JWT_SECRET || 'dla/;dsm;glm3-2058u6-2439y5vuj5t94').toString();
 
     this.tokens.push({access, token});
 
@@ -56,7 +56,7 @@ UserSchema.methods.removeToken = function (token) {
 
 UserSchema.statics.findByToken = function (token) {
     try {
-        var decoded = jwt.verify(token, process.env.JWT_SECRET);
+        var decoded = jwt.verify(token, process.env.JWT_SECRET || 'dla/;dsm;glm3-2058u6-2439y5vuj5t94');
     } catch (e) {
         return Promise.reject(e);
     }
