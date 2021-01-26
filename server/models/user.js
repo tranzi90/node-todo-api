@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
+// const {users} = require('../tests/seed/seed');
+
 var UserSchema = new mongoose.Schema({
     email: {
         type: String,
@@ -20,7 +22,7 @@ var UserSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 6
-    },
+     },
     tokens: [{
         access: {
             type: String,
@@ -68,21 +70,15 @@ UserSchema.statics.findByToken = function (token) {
     });
 };
 
-UserSchema.statics.findByCredentials = function (email, password) {
-
-     return this.findOne({email}).then(function (user) {
-        if (!user)
-            return Promise.reject();
-        
-        return new Promise(function (resolve, reject) {
-            bcrypt.compare(password, user.password, function (err, res) {
-                if (res)
-                    resolve(user);
-                else
-                    reject(err);
-            });
-        });
-    });
+UserSchema.statics.findByCredentials = async function (email, password) {
+    try {
+        const user = await this.findOne({email});
+        const match = await bcrypt.compare(password, user.password);
+        if (match)
+            return user;
+    } catch (e) {
+        throw new Error();
+    }
 };
 
 UserSchema.pre('save', function (next) {
